@@ -1,0 +1,103 @@
+--[[ 
+    CUSTOM SHIFT LOCK - MOBILE FINAL VERSION
+    Made by: Akbar
+    Fitur: GUI Control, Drag Offset, Support All Mobile Executors
+]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local isToggled = false
+local currentOffset = Vector3.new(2.5, 1.5, 0)
+local moveSpeed = 0.2
+
+-- --- UI SETUP ---
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ShiftLockGui_Akbar"
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 150, 0, 150)
+MainFrame.Position = UDim2.new(0.1, 0, 0.4, 0)
+MainFrame.BackgroundTransparency = 0.5
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MainFrame.Parent = ScreenGui
+MainFrame.Visible = true
+
+-- Membuat Frame bisa ditarik (Draggable)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local Title = Instance.new("TextLabel")
+Title.Text = "Custom Shift Lock\nBy Akbar"
+Title.Size = UDim2.new(1, 0, 0.3, 0)
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.TextScaled = true
+Title.Parent = MainFrame
+
+-- Tombol TOGGLE
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Text = "ON / OFF"
+ToggleBtn.Size = UDim2.new(0.8, 0, 0.2, 0)
+ToggleBtn.Position = UDim2.new(0.1, 0, 0.35, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+ToggleBtn.Parent = MainFrame
+
+-- Tombol Kontrol Arah
+local function createArrow(txt, pos, moveVec)
+    local btn = Instance.new("TextButton")
+    btn.Text = txt
+    btn.Size = UDim2.new(0.2, 0, 0.2, 0)
+    btn.Position = pos
+    btn.Parent = MainFrame
+    
+    btn.MouseButton1Down:Connect(function()
+        _G.Moving = true
+        while _G.Moving do
+            currentOffset = currentOffset + moveVec
+            task.wait(0.05)
+        end
+    end)
+    btn.MouseButton1Up:Connect(function() _G.Moving = false end)
+end
+
+createArrow("▲", UDim2.new(0.4, 0, 0.55, 0), Vector3.new(0, moveSpeed, 0))   -- Atas
+createArrow("▼", UDim2.new(0.4, 0, 0.8, 0), Vector3.new(0, -moveSpeed, 0))  -- Bawah
+createArrow("◄", UDim2.new(0.15, 0, 0.67, 0), Vector3.new(-moveSpeed, 0, 0)) -- Kiri
+createArrow("►", UDim2.new(0.65, 0, 0.67, 0), Vector3.new(moveSpeed, 0, 0))  -- Kanan
+
+-- --- LOGIKA UTAMA ---
+ToggleBtn.MouseButton1Click:Connect(function()
+    isToggled = not isToggled
+    ToggleBtn.BackgroundColor3 = isToggled and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+end)
+
+RunService.RenderStepped:Connect(function()
+    local character = player.Character
+    if character and character:FindFirstChild("Humanoid") and character:FindFirstChild("HumanoidRootPart") then
+        local humanoid = character.Humanoid
+        local hrp = character.HumanoidRootPart
+
+        if isToggled then
+            -- Rotasi Karakter mengikuti Kamera
+            local lookVector = camera.CFrame.LookVector
+            hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + Vector3.new(lookVector.X, 0, lookVector.Z))
+            
+            -- Terapkan Geser Kamera
+            humanoid.CameraOffset = humanoid.CameraOffset:Lerp(currentOffset, 0.15)
+            
+            -- Lock Center (Opsional untuk mobile, beberapa game butuh ini)
+            UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+        else
+            humanoid.CameraOffset = humanoid.CameraOffset:Lerp(Vector3.new(0, 0, 0), 0.15)
+            UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+        end
+    end
+end)
+
+print("Custom Shift Lock Mobile by Akbar - Injected!")
