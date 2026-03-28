@@ -1,103 +1,152 @@
 --[[ 
-    CUSTOM SHIFT LOCK - MOBILE FINAL VERSION
+    CUSTOM SHIFT LOCK - FINAL MAX VERSION
     Made by: Akbar
-    Fitur: GUI Control, Drag Offset, Support All Mobile Executors
+    Status: Optimized for Mobile & High Performance
 ]]
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
+
+-- Konfigurasi Default
 local isToggled = false
-local currentOffset = Vector3.new(2.5, 1.5, 0)
+local currentOffset = Vector3.new(3, 2, 0) -- Posisi default (Kanan, Atas)
+local targetOffset = Vector3.new(0, 0, 0)
 local moveSpeed = 0.2
 
--- --- UI SETUP ---
+-- --- UI CREATION ---
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ShiftLockGui_Akbar"
-ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.Name = "ShiftLock_Akbar_Final"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 150, 0, 150)
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 140, 0, 160)
 MainFrame.Position = UDim2.new(0.1, 0, 0.4, 0)
-MainFrame.BackgroundTransparency = 0.5
-MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-MainFrame.Parent = ScreenGui
-MainFrame.Visible = true
-
--- Membuat Frame bisa ditarik (Draggable)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BackgroundTransparency = 0.2
+MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-MainFrame.Draggable = true
+MainFrame.Draggable = true -- Bisa digeser di layar
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
 
 local Title = Instance.new("TextLabel")
-Title.Text = "Custom Shift Lock\nBy Akbar"
-Title.Size = UDim2.new(1, 0, 0.3, 0)
-Title.BackgroundTransparency = 1
+Title.Text = "SHIFT LOCK"
+Title.Font = Enum.Font.GothamBold
 Title.TextColor3 = Color3.new(1, 1, 1)
-Title.TextScaled = true
+Title.TextSize = 14
+Title.Size = UDim2.new(1, 0, 0.2, 0)
+Title.BackgroundTransparency = 1
 Title.Parent = MainFrame
 
--- Tombol TOGGLE
+local MadeBy = Instance.new("TextLabel")
+MadeBy.Text = "by Akbar"
+MadeBy.Font = Enum.Font.GothamItalic
+MadeBy.TextColor3 = Color3.fromRGB(180, 180, 180)
+MadeBy.TextSize = 10
+MadeBy.Position = UDim2.new(0, 0, 0.15, 0)
+MadeBy.Size = UDim2.new(1, 0, 0.1, 0)
+MadeBy.BackgroundTransparency = 1
+MadeBy.Parent = MainFrame
+
+-- Tombol Toggle Utama
 local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Text = "ON / OFF"
+ToggleBtn.Name = "Toggle"
+ToggleBtn.Text = "ENABLE"
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextColor3 = Color3.new(1, 1, 1)
 ToggleBtn.Size = UDim2.new(0.8, 0, 0.2, 0)
-ToggleBtn.Position = UDim2.new(0.1, 0, 0.35, 0)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+ToggleBtn.Position = UDim2.new(0.1, 0, 0.3, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 ToggleBtn.Parent = MainFrame
 
--- Tombol Kontrol Arah
-local function createArrow(txt, pos, moveVec)
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 8)
+BtnCorner.Parent = ToggleBtn
+
+-- Fungsi Tombol Kontrol (Panah)
+local function createControl(txt, pos, vec)
     local btn = Instance.new("TextButton")
     btn.Text = txt
-    btn.Size = UDim2.new(0.2, 0, 0.2, 0)
+    btn.Font = Enum.Font.GothamBold
+    btn.Size = UDim2.new(0.22, 0, 0.18, 0)
     btn.Position = pos
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.TextColor3 = Color3.new(1, 1, 1)
     btn.Parent = MainFrame
     
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 5)
+    c.Parent = btn
+    
+    local pressing = false
     btn.MouseButton1Down:Connect(function()
-        _G.Moving = true
-        while _G.Moving do
-            currentOffset = currentOffset + moveVec
-            task.wait(0.05)
+        pressing = true
+        while pressing do
+            currentOffset = currentOffset + vec
+            task.wait(0.03)
         end
     end)
-    btn.MouseButton1Up:Connect(function() _G.Moving = false end)
+    btn.MouseButton1Up:Connect(function() pressing = false end)
+    btn.MouseLeave:Connect(function() pressing = false end)
 end
 
-createArrow("▲", UDim2.new(0.4, 0, 0.55, 0), Vector3.new(0, moveSpeed, 0))   -- Atas
-createArrow("▼", UDim2.new(0.4, 0, 0.8, 0), Vector3.new(0, -moveSpeed, 0))  -- Bawah
-createArrow("◄", UDim2.new(0.15, 0, 0.67, 0), Vector3.new(-moveSpeed, 0, 0)) -- Kiri
-createArrow("►", UDim2.new(0.65, 0, 0.67, 0), Vector3.new(moveSpeed, 0, 0))  -- Kanan
+-- Posisi Tombol Panah
+createControl("▲", UDim2.new(0.39, 0, 0.55, 0), Vector3.new(0, moveSpeed, 0))
+createControl("▼", UDim2.new(0.39, 0, 0.78, 0), Vector3.new(0, -moveSpeed, 0))
+createControl("◄", UDim2.new(0.12, 0, 0.67, 0), Vector3.new(-moveSpeed, 0, 0))
+createControl("►", UDim2.new(0.66, 0, 0.67, 0), Vector3.new(moveSpeed, 0, 0))
 
--- --- LOGIKA UTAMA ---
+-- --- LOGIKA TOGGLE ---
 ToggleBtn.MouseButton1Click:Connect(function()
     isToggled = not isToggled
-    ToggleBtn.BackgroundColor3 = isToggled and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+    if isToggled then
+        ToggleBtn.Text = "ENABLED"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+    else
+        ToggleBtn.Text = "DISABLED"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    end
 end)
 
+-- --- LOOP MAX PERFORMANCE ---
 RunService.RenderStepped:Connect(function()
-    local character = player.Character
-    if character and character:FindFirstChild("Humanoid") and character:FindFirstChild("HumanoidRootPart") then
-        local humanoid = character.Humanoid
-        local hrp = character.HumanoidRootPart
+    local char = player.Character
+    local hum = char and char:FindFirstChild("Humanoid")
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
 
+    if hum and hrp then
         if isToggled then
-            -- Rotasi Karakter mengikuti Kamera
-            local lookVector = camera.CFrame.LookVector
-            hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + Vector3.new(lookVector.X, 0, lookVector.Z))
-            
-            -- Terapkan Geser Kamera
-            humanoid.CameraOffset = humanoid.CameraOffset:Lerp(currentOffset, 0.15)
-            
-            -- Lock Center (Opsional untuk mobile, beberapa game butuh ini)
+            -- Kunci Mouse (Khusus mobile, ini membantu fokus kamera)
             UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+            
+            -- Perputaran Karakter yang Sangat Halus (Lerp Rotation)
+            local lookVector = camera.CFrame.LookVector
+            local targetRotation = CFrame.new(hrp.Position, hrp.Position + Vector3.new(lookVector.X, 0, lookVector.Z))
+            hrp.CFrame = hrp.CFrame:Lerp(targetRotation, 0.25) -- Stabilitas tinggi
+            
+            -- Offset Kamera dengan Interpolasi (No Stuttering)
+            targetOffset = targetOffset:Lerp(currentOffset, 0.15)
+            hum.CameraOffset = targetOffset
         else
-            humanoid.CameraOffset = humanoid.CameraOffset:Lerp(Vector3.new(0, 0, 0), 0.15)
-            UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+            -- Reset ke Kondisi Normal
+            targetOffset = targetOffset:Lerp(Vector3.new(0, 0, 0), 0.15)
+            hum.CameraOffset = targetOffset
+            
+            if UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
+                UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+            end
         end
     end
 end)
 
-print("Custom Shift Lock Mobile by Akbar - Injected!")
+print("Custom Shift Lock by Akbar - Final Version Loaded Successfully!")
